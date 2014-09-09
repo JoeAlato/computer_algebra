@@ -1,0 +1,153 @@
+/* Eric Meyer's CSS Reset */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/* End of Eric Meyer's CSS Reset */
+
+html {
+	height: 100%;
+}
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
+	display: block;
+}
+body {
+	font: Candara, Calibri, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+
+}
+.wrapper {
+	width: 100%;
+	min-height: 100%;
+	height: auto !important;
+	height: 100%;
+}
+
+
+/* Header
+-----------------------------------------------------------------------------*/
+.header {
+}
+
+
+/* Middle
+-----------------------------------------------------------------------------*/
+.content {
+	padding: 0 0 100px;
+	text-align: center;
+}
+/* Footer
+-----------------------------------------------------------------------------*/
+.footer {
+	margin: -100px auto 0;
+	min-width: 1000px;
+	position: relative;
+}
+
+/* Text
+-----------------------------------------------------------------------------*/
+
+.header_1_text {
+	font-family: Candara, Calibri, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+	color: #000000;
+	font-size: 32px;
+	padding: 19;
+	font-weight: bold;
+	text-transform: uppercase;
+	word-spacing: 4px;
+	line-height: 20px;
+	text-align: center;
+}
+
+.header_2_text {
+	font-family: Candara, Calibri, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+	color: #000000;
+	font-size: 24px;
+	padding: 19;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	word-spacing: 9px;
+	line-height: 15px;
+	text-align: center;
+}
+
+.name_text{
+	font-family: Candara, Calibri, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+	color: #000000;
+	font-size: 16px;
+	padding: 15;
+	text-transform: lowercase;
+	letter-spacing: 0.8px;
+	word-spacing: 9px;
+	line-height: 17px;
+	text-align: center;
+}
+
+#buttons {
+	text-align: center;
+	font-size: 14px;
+}
+#copyright {
+	font-family: Candara, Calibri, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+	font-size: 9px;
+	text-align: right;
+	color: #cccccc;
+	text-decoration: none;
+}
+
+	#g_labels text { text-anchor: middle; }
+	#g_elabels text { text-anchor: middle; fill: red; font-weight: bold; }
+	body { font: 10px sans-serif; }
+	.link { fill: none; stroke: #000; }
+	.border { fill: none; shape-rendering: crispEdges; stroke: #aaa; }
+	.node circle { fill: #fff; stroke: black; stroke-width: 2px; }
+	.node text { font: 15px sans-serif; } 
+
+	/* from http://html-generator.weebly.com/css-textbox-style.html */
+.textbox { 
+    border: 1px dashed #000000; 
+    outline: 0; 
+    height: 25px; 
+    width: 275px; 
+	font-size: 14px;
+	text-align: center;
+  } 
+</style>

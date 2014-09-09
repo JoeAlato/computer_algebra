@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset = "utf-8" />
+	<!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<title>Компьютерная алгебра ПМИ НИУ ВШЭ Логинова 401</title>
+	<meta name = "keywords" content="" />
+	<meta name = "description" content="" />
+	<link href = "style.css" rel="stylesheet">
+	<link rel = "stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+	<script src = "http://cdn.craig.is/js/mousetrap/mousetrap.min.js?9d308"></script>
+	<script src = "jquery-1.11.1.min.js"></script>
+</head>
+<body>
+
+<div class="wrapper">
+
+	<header class = "header">
+	<p class = "header_1_text">Проект. Часть I.</p>
+	<p class = "header_2_text">Компьютерная алгебра. НИУ ВШЭ ПМИ.</p>
+	<p class = "name_text"> Логинова Екатерина, 401.</p>
+	
+	<div id = "buttons">
+	<form>
+	<p><INPUT type = "Text" name = "query" id = "query" placeholder = "запрос" class = "textbox">
+	<INPUT type = "Button" class = "pure-button" id = "start" value = " Построить дерево " onclick = "main()"></p>
+	<p><INPUT type = "Text" name = "output" id = "output" placeholder = "результат" class = "textbox" DISABLED></p>
+	</form>
+	</div>
+	</header><!-- .header-->
+
+	<main class = "content">
+	</main><!--.content -->
+
+</div><!-- .wrapper -->
+
+<footer class = "footer">
+	<div id = "copyright">
+	CSS: <a href = "http://csslayoutgenerator.com/">CSS Layout Generator</a><br>
+	Keyboard shortcuts: <a href = "craig.is/killing/mice">mousetrap</a><br>
+	Tree model: <a href = "http://bl.ocks.org/mbostock/4339083"> collapsible tree </a><br>
+	</div>
+</footer><!-- .footer -->
+<script src = "http://d3js.org/d3.v3.min.js"></script>
+<script>
+	Mousetrap.bind('enter', function() { 
+		main();
+	 }, 'keydown');
+ 
+    function growTree() {
+	
+	var identifier = 0;
+	var output_text = document.getElementById("output");
+	var margin = {top: 20, right: 120, bottom: 20, left: 120},
+            width = window.innerWidth*0.6 - margin.right - margin.left,
+            height = window.innerWidth*0.6 - margin.top - margin.bottom;
+    var tree = d3.layout.tree()
+            .size([height,width]);
+    var diagonal = d3.svg.diagonal()
+            .projection(function (d) {
+                return [width - d.x, d.y];
+            });
+    var svg = d3.select(".content").append("svg:svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		isOperation = function (symbol) {
+            symbol = symbol.toString();
+            regexp = new RegExp("[\\^\\+\\-\\*\\/]+");
+            return regexp.test(symbol);
+        }
+		
+		isNumber = function (symbol) {
+			symbol = symbol.toString();
+            regexp = new RegExp("[0-9]");
+            return regexp.test(symbol);
+		}
+		
+		checkData = function (processed_string) {
+			var regexp = new RegExp("^[0-9\\*\\/\\+\\-\\(\\)\\^\\.]+$");
+			
+			if (!regexp.test(processed_string)) {
+				output_text.value = "Ошибка: недопустимые символы";
+				return false;
+			}
+			
+			regexp = new RegExp("\\.[0-9]+\\.");
+			if (regexp.test(processed_string)) {
+				output_text.value = "Ошибка: лишние точки внутри чисел";
+				return false;
+			}
+			
+			regexp = new RegExp("[\\*\\/\\+\\-\\^\\.]{2}");
+			var regexp_2 = new RegExp("[0-9\\.]+[\\*\\/\\+\\^]{1}-[0-9\\.]+");
+			if (regexp.test(processed_string) && !regexp_2.test(processed_string)) {
+				output_text.value = "Ошибка: лишние знаки операций/точки";
+				return false;
+			}
+			
+			var count = 0;
+			for (var k = 0; k < processed_string.length; k++) {
+				if (processed_string[k] == '(') count++;
+				if (processed_string[k] == ')') count--;
+			}
+			if (count != 0) {
+				output_text.value = "Ошибка: несбалансированные скобки";
+				return false;
+			}
+			return true;
+		}
+        
+		comparePriority = function (first_operator, second_operator) {
+            var first_priority, second_priority;
+            if (first_operator == '^') first_priority = 1;
+            if (second_operator == '^') second_priority = 1;
+            if (first_operator == '*' || first_operator == '/') first_priority = 0.5;
+            if (second_operator == '*' || second_operator == '/') second_priority = 0.5;
+            if (first_operator == '+' || first_operator == '-') first_priority = 0.1;
+            if (second_operator == '+' || second_operator == '-') second_priority = 0.1;
+            if (second_operator == '(') second_operatorpr = 0;
+            return first_priority - second_priority;
+        }
+		
+        postfixForm = function (processed_string) {
+            var stack = [];
+            var N = processed_string.length;
+            var return_string = "";
+            for (var i = 0; i < N; i++) {
+                var current_symbol = processed_string.charAt(i);
+                if (isNumber(current_symbol)) {
+                    return_string += '#';
+                    while (isNumber(current_symbol) || current_symbol == '.') {
+                        return_string += (current_symbol);
+                        current_symbol = processed_string.charAt(++i);
+                    }
+                    i--;
+                } else if (current_symbol == '-') {
+					var previous_symbol = processed_string.charAt(i - 1);
+					if (i == 0 || isOperation(previous_symbol) || previous_symbol == '(') {
+						var current_string = "#";
+						current_string += current_symbol;
+						current_symbol = processed_string.charAt(++i);
+						while (isNumber(current_symbol) || current_symbol == '.') {
+							current_string += (current_symbol);
+							current_symbol = processed_string.charAt(++i);
+						}
+						return_string += current_string;
+						i--;
+					} else {
+						while (comparePriority(current_symbol, stack[stack.length - 1]) <= 0) {
+                            return_string += (stack.pop());
+                        }
+                        stack.push(current_symbol);
+					}
+				} else {
+                    if (current_symbol == ')') {
+                        while (current_symbol != '(') {
+                            current_symbol = stack.pop();
+                            if (current_symbol != '(')
+                                return_string += (current_symbol);
+                        }
+                    } else if (current_symbol != '(') {
+                        while (comparePriority(current_symbol, stack[stack.length - 1]) <= 0) {
+                            return_string += (stack.pop());
+                        }
+                        stack.push(current_symbol);
+                    }   else stack.push(current_symbol);
+                } 
+            }
+            while (stack.length != 0) {
+                return_string += (stack.pop());
+            }
+            return return_string;
+        }
+		
+        loadData = function (current_string, data, parent) {
+            if (current_string.length > 1) {
+				var state = 0;
+				identifier++;
+				var id = identifier;
+				var current = current_string[current_string.length - 1];
+				if (isNumber(current)) {
+							var number = "";
+							while (current != "#") {
+								number += current;
+								current_string = current_string.substring(0, current_string.length - 1);
+								current = current_string[current_string.length - 1];
+							}
+							current = number.split("").reverse().join("");
+							data.push({"name": current, "parent": parent, "identifier": identifier});
+				} else {
+					data.push({"name": current, "parent": parent, "identifier": identifier});
+				}
+					for (var i = current_string.length - 2; i >= 0; i--) {
+						if (current_string[i] == '#') state--;
+						if (isOperation(current_string[i]))
+							if (!(current_string[i] == '-' && current_string[i - 1] == '#'))
+								state++;
+						if (state < 0) {
+							loadData(current_string.substring(i, current_string.length - 1), data, [current, id]);
+							loadData(current_string.substring(0, i), data, [current, id]);
+							i = 0;
+						}
+					}
+			}
+		}
+        
+		main = function () {
+			
+            var data = [
+            ];
+			
+			svg.selectAll("*").remove();
+			
+            var processed_string = document.getElementById("query").value;
+			
+			processed_string = processed_string.replace(/ /g,'');
+			processed_string = processed_string.replace(':','/');
+			processed_string = processed_string.replace(',','.');
+			if (!checkData(processed_string)) return;
+			
+            processed_string = postfixForm(processed_string);
+            loadData(processed_string, data, ['root', -1]);
+			
+			output_text.value = processed_string;
+
+            var dataMap = data.reduce(function(map, node) {
+                map[node.name + node.identifier] = node;
+                return map;
+            }, {});
+			
+            var treeData = [];
+            data.forEach(function(node) {
+                var parent = dataMap[node.parent[0] + node.parent[1]];
+                if (parent) {
+                    (parent.children || (parent.children = []))
+                            .push(node);
+                } else {
+                    treeData.push(node);
+                }
+            });
+			
+			identifier = 0;
+			
+            root = treeData[0];
+            update(root);
+            }
+		var i = 0;
+				
+		function update(source) {
+		
+				var nodes = tree.nodes(root).reverse(),
+						links = tree.links(nodes);
+
+				nodes.forEach(function (d) {
+					d.y = d.depth * 100;
+				});
+
+				var node = svg.selectAll("g.node")
+						.data(nodes, function (d) {
+							return d.id || (d.id = ++i);
+						});
+						
+				var nodeEnter = node.enter().append("g")
+						.attr("class", "node")
+						.attr("transform", function (d) {
+							return "translate(" + (width - d.x) + "," + d.y + ")";
+						});
+
+				nodeEnter.append("circle")
+						.attr("r", 5)
+						.style("fill", "black");
+
+				nodeEnter.append("text")
+						.attr("x", function (d) {
+							return d.children || d._children ? -10 : 10;
+						})
+						.attr("dy", ".35em")
+						.attr("text-anchor", function (d) {
+							return d.children || d._children ? "end" : "start";
+						})
+						.text(function (d) {
+							return d.name;
+						})
+						.style("fill-opacity", 1);
+
+				var link = svg.selectAll("path.link")
+						.data(links, function (d) {
+							return d.target.id;
+						});
+
+				link.enter().insert("path", "g")
+						.attr("class", "link")
+						.attr("d", diagonal);
+
+			}
+    }
+    var tree = growTree();
+</script>
+
+</body>
+</html>
