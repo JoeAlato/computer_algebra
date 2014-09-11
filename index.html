@@ -79,23 +79,9 @@
 		}
 		
 		checkData = function (processed_string) {
-			var regexp = new RegExp("^[0-9\\*\\/\\+\\-\\(\\)\\^\\.]+$");
-			
+			var regexp = /^[0-9\*\/\\+\-\(\)\^\.]+$/gm;
 			if (!regexp.test(processed_string)) {
 				output_text.value = "Ошибка: недопустимые символы";
-				return false;
-			}
-			
-			regexp = new RegExp("\\.[0-9]+\\.");
-			if (regexp.test(processed_string)) {
-				output_text.value = "Ошибка: лишние точки внутри чисел";
-				return false;
-			}
-			
-			regexp = new RegExp("[\\*\\/\\+\\-\\^\\.]{2}");
-			var regexp_2 = new RegExp("[0-9\\.]+[\\*\\/\\+\\^]{1}-[0-9\\.]+");
-			if (regexp.test(processed_string) && !regexp_2.test(processed_string)) {
-				output_text.value = "Ошибка: лишние знаки операций/точки";
 				return false;
 			}
 			
@@ -108,6 +94,51 @@
 				output_text.value = "Ошибка: несбалансированные скобки";
 				return false;
 			}
+			
+			// если в строке есть нули, проверить, что они подходят под два варианта: либо это ноль после любой другой цифры
+			// или запятой, либо это одиночный ноль, тогда до него и после должны быть скобки или операции
+			regexp = /0/;
+			if (regexp.test(processed_string)) {
+				regexp = /[1-9\.]+0+/g;
+				regexp_2 = /[\+\-\*\/\^\(\]0{1}[\+\-\*\/\^\(\)\r\n]/g;
+				if (!regexp.test(processed_string) && !regexp_2.test(processed_string)) {
+					output_text.value = "Ошибка: лишние нули";
+					return false;
+				}
+			}
+			
+			// дублирующиеся знаки операций/запятые
+			regexp = /[\*\/\+\-\^\.]{2}/g;
+			if (regexp.test(processed_string) ) { //&& !regexp_2.test(processed_string)
+				output_text.value = "Ошибка: лишние знаки операций/точки";
+				return false;
+			}
+			
+			// проверка на число операндов для всех операций кроме минуса
+			regexp = /[\+\*\/\^]/;
+			if (regexp.test(processed_string)) {
+				regexp = /[0-9\.{0,1}]+[\+\*\/\^]{1}[0-9\.{0,1}]+/g;
+				if (!regexp.test(processed_string)) {
+					output_text.value = "Ошибка: не хватает операндов";
+					return false;
+				}
+			}
+			
+			// отдельные проверки для минуса - случай бинарный и унарный
+			if (processed_string.search("-") != -1) {
+				regexp = /(-[0-9\.{0,1}]+[\\*\/\\+\\-\\^\\.]{1}[0-9\.{0,1}]+)|(^-[0-9\.{0,1}]+[\r\n]*$)|(\(-[0-9\.{0,1}]+\))|([0-9\.{0,1}]+\-[0-9\.{0,1}]+)/gm;
+				if (!regexp.test(processed_string)) {
+					output_text.value = "Ошибка: не хватает операндов";
+					return false;
+				}
+			}
+			// случай вроде 0.9.9
+			regexp = /\.[0-9]+\./g;
+			if (regexp.test(processed_string)) {
+				output_text.value = "Ошибка: лишние точки внутри чисел";
+				return false;
+			}
+			
 			return true;
 		}
         
@@ -217,8 +248,8 @@
             var processed_string = document.getElementById("query").value;
 			
 			processed_string = processed_string.replace(/ /g,'');
-			processed_string = processed_string.replace(':','/');
-			processed_string = processed_string.replace(',','.');
+			processed_string = processed_string.replace(/:/g,'/');
+			processed_string = processed_string.replace(/,/g,'.');
 			if (!checkData(processed_string)) return;
 			
             processed_string = postfixForm(processed_string);
