@@ -78,8 +78,14 @@
             return regexp.test(symbol);
 		}
 		
+		isVariable = function (symbol) {
+			symbol = symbol.toString();
+            regexp = new RegExp("[a-z]");
+            return regexp.test(symbol);
+		}
+		
 		checkData = function (processed_string) {
-			var regexp = /^[0-9\*\/\\+\-\(\)\^\.]+$/gm;
+			var regexp = /^[0-9a-z\*\/\\+\-\(\)\^\.]+$/gm;
 			if (!regexp.test(processed_string)) {
 				output_text.value = "Ошибка: недопустимые символы";
 				return false;
@@ -99,9 +105,8 @@
 			// или запятой, либо это одиночный ноль, тогда до него и после должны быть скобки или операции
 			regexp = /0/;
 			if (regexp.test(processed_string)) {
-				regexp = /[1-9\.]+0+/g;
-				regexp_2 = /[\+\-\*\/\^\(\]0{1}[\+\-\*\/\^\(\)\r\n]/g;
-				if (!regexp.test(processed_string) && !regexp_2.test(processed_string)) {
+				regexp = /([1-9]+\.{0,1}0+)|([\+\-\*\/\^\(]0{1}[\+\-\*\/\^\(\)\r\n])|(^0{1}\.)/g;
+				if (!regexp.test(processed_string)) {
 					output_text.value = "Ошибка: лишние нули";
 					return false;
 				}
@@ -109,15 +114,35 @@
 			
 			// дублирующиеся знаки операций/запятые
 			regexp = /[\*\/\+\-\^\.]{2}/g;
-			if (regexp.test(processed_string) ) { //&& !regexp_2.test(processed_string)
+			if (regexp.test(processed_string) ) {
 				output_text.value = "Ошибка: лишние знаки операций/точки";
 				return false;
+			}
+			
+			regexp = /(^\.{1}[0-9])|([^0-9]\.{1}[0-9])/g;
+			if (regexp.test(processed_string) ) {
+				output_text.value = "Ошибка: неверный формат числа";
+				return false;
+			}
+			regexp = /([^a-z0-9\.][a-z]{1}[^a-z0-9\.])|(^[a-z]{1}[^a-z0-9\.])|(^[a-z]{1}$)/g;
+			if (!regexp.test(processed_string) ) {
+				output_text.value = "Ошибка: неверный формат переменных";
+				return false;
+			}
+			
+			regexp = /[\(\)]/g;
+			if (regexp.test(processed_string)) {
+				regexp = /([0-9]\.{0,1}\()|(\)[0-9]\.{0,1})|([a-z]{1}\()|(\)[a-z]{1})/g;
+				if (regexp.test(processed_string)) {
+					output_text.value = "Ошибка: нет операции около скобки";
+					return false;
+				}
 			}
 			
 			// проверка на число операндов для всех операций кроме минуса
 			regexp = /[\+\*\/\^]/;
 			if (regexp.test(processed_string)) {
-				regexp = /[0-9\.{0,1}]+[\+\*\/\^]{1}[0-9\.{0,1}]+/g;
+				regexp = /([0-9\.{0,1}\)]+[\+\*\/\^]{1}[0-9\.{0,1}\(]+)|([a-z\)]{1}[\+\*\/\^]{1}[a-z\(]{1})/g;
 				if (!regexp.test(processed_string)) {
 					output_text.value = "Ошибка: не хватает операндов";
 					return false;
@@ -126,7 +151,7 @@
 			
 			// отдельные проверки для минуса - случай бинарный и унарный
 			if (processed_string.search("-") != -1) {
-				regexp = /(-[0-9\.{0,1}]+[\\*\/\\+\\-\\^\\.]{1}[0-9\.{0,1}]+)|(^-[0-9\.{0,1}]+[\r\n]*$)|(\(-[0-9\.{0,1}]+\))|([0-9\.{0,1}]+\-[0-9\.{0,1}]+)/gm;
+				regexp = /(-[0-9\.{0,1}]+[\\*\/\\+\\-\\^\\.]{1}[0-9\.{0,1}]+)|(^-[0-9\.{0,1}]+[\r\n]*$)|(\(-[0-9\.{0,1}]+\))|([0-9\.{0,1}]+\-[0-9\.{0,1}]+)|(-[a-z]{1}[\\*\/\\+\\-\\^\\.]{1}[a-z]{1})|(^-[a-z]{1}[\r\n]*$)|(\(-[a-z]{1}\))|([a-z]{1}\-[a-z]{1})/gm;
 				if (!regexp.test(processed_string)) {
 					output_text.value = "Ошибка: не хватает операндов";
 					return false;
@@ -160,9 +185,9 @@
             var return_string = "";
             for (var i = 0; i < N; i++) {
                 var current_symbol = processed_string.charAt(i);
-                if (isNumber(current_symbol)) {
+                if (isNumber(current_symbol) || isVariable(current_symbol)) {
                     return_string += '#';
-                    while (isNumber(current_symbol) || current_symbol == '.') {
+                    while (isNumber(current_symbol) || current_symbol == '.' || isVariable(current_symbol)) {
                         return_string += (current_symbol);
                         current_symbol = processed_string.charAt(++i);
                     }
@@ -173,7 +198,7 @@
 						var current_string = "#";
 						current_string += current_symbol;
 						current_symbol = processed_string.charAt(++i);
-						while (isNumber(current_symbol) || current_symbol == '.') {
+						while (isNumber(current_symbol) || current_symbol == '.' || isVariable(current_symbol)) {
 							current_string += (current_symbol);
 							current_symbol = processed_string.charAt(++i);
 						}
@@ -212,7 +237,7 @@
 				identifier++;
 				var id = identifier;
 				var current = current_string[current_string.length - 1];
-				if (isNumber(current)) {
+				if (isNumber(current) || isVariable(current)) {
 							var number = "";
 							while (current != "#") {
 								number += current;
